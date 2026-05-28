@@ -133,9 +133,10 @@ where
                                 .next()
                                 .context(format!("Failed to parse FT line {}", line_num + 1))?;
 
-                            let pos_u32 = pos
-                                .parse::<u32>()
-                                .context(format!("Failed to parse FT line {}", line_num + 1))?;
+                            let Ok(pos_u32) = pos.parse::<u32>() else {
+                                //TODO maybe add logging
+                                continue;
+                            };
 
                             aa_change_pos = Some(pos_u32);
                         }
