@@ -1,6 +1,8 @@
 use anyhow::{Context, Result, anyhow};
 use std::collections::HashMap;
 use std::io::Write;
+use std::time::Duration;
+use tokio::time::sleep;
 
 use futures::{StreamExt, stream};
 use reqwest::Client;
@@ -35,20 +37,52 @@ pub async fn fetch_sequences<W: Write>(
 
     let masses_dict = AminoMasses::new();
 
-    let mut responses = stream::iter(requests)
-        .map(|chunk| async move {
-            let resp = Client::new()
-                .post(URL)
-                .json(&RequestBody { ids: chunk })
-                .send()
-                .await?
-                .error_for_status()?
-                .json::<Vec<SequenceResponse>>()
-                .await?;
 
-            Ok::<_, reqwest::Error>(resp)
-        })
-        .buffer_unordered(CONCURRENCY);
+
+let client = Client::new();
+
+let mut responses = stream::iter(requests)
+    .map({
+        move |chunk| {
+            let client = client.clone();
+
+            async move {
+                let mut attempt = 0;
+                let max_attempts = 3;
+
+                loop {
+                    attempt += 1;
+
+                    let result = async {
+                        let resp = client
+                            .post(URL)
+                            .json(&RequestBody { ids: chunk })
+                            .send()
+                            .await?
+                            .error_for_status()?
+                            .json::<Vec<SequenceResponse>>()
+                            .await?;
+
+                        Ok::<_, reqwest::Error>(resp)
+                    }
+                    .await;
+
+                    match result {
+                        Ok(resp) => return Ok(resp),
+
+                        Err(_) if attempt < max_attempts => {
+                            let backoff = Duration::from_millis(100 * 2u64.pow(attempt - 1));
+                            sleep(backoff).await;
+                            continue;
+                        }
+
+                        Err(err) => return Err(err),
+                    }
+                }
+            }
+        }
+    })
+    .buffer_unordered(CONCURRENCY);
 
     while let Some(result) = responses.next().await {
         let batch = result.context("request failed")?;
