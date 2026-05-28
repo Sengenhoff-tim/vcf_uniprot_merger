@@ -1,5 +1,5 @@
 [package]
-name = "uniprot_parse_rust"
+name = "vcf_uniprot_merger"
 version = "0.1.0"
 edition = "2024"
 
