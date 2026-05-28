@@ -24,7 +24,7 @@ impl Variant {
         Variant {
             pos: pos.parse::<u32>().unwrap(),
             aa_ref: aa_ref.as_bytes().to_vec(),
-            aa_new: right[r..].as_bytes().to_vec(),
+            aa_new: right.as_bytes()[r..].to_vec(),
         }
     }
 

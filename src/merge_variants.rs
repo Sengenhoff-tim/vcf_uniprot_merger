@@ -77,7 +77,7 @@ where
         if line.starts_with("FT") {
             writeln!(writer, "{}", line)?;
 
-            if insert_candidates.len() > 0 {
+            if !insert_candidates.is_empty() {
                 
                 if let Some(pos) = aa_change_pos{
                     let segment = line.get(21..)
@@ -86,10 +86,10 @@ where
 
                     if let Some(ref mut aa_change) = aa_change_line {
                         if !segment.starts_with("/") {
-                            aa_change.push_str(&line.get(21..).unwrap());
+                            aa_change.push_str(line.get(21..).unwrap());
                         }
                         else {
-                            if let Some(caps) = regex_aa_change.captures(&aa_change.get(28..).unwrap()) {
+                            if let Some(caps) = regex_aa_change.captures(aa_change.get(28..).unwrap()) {
                                 let g1_bytes = caps[1].as_bytes();
                                 let g2_bytes = caps[2].as_bytes();
                                 

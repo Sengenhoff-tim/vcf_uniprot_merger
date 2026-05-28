@@ -18,14 +18,13 @@ pub fn build_variant_dict<R: std::io::Read>(
 
         let (id, aa_change) = line.split_once(' ').context("Missing ' '")?;
 
-        if re_id.is_match(id) && re_aa.is_match(aa_change) {
-            if let Ok(key) = id[4..].parse::<u32>() {
+        if re_id.is_match(id) && re_aa.is_match(aa_change)
+            && let Ok(key) = id[4..].parse::<u32>() {
                 variants
                     .entry(key)
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(Variant::from_string_unchecked(aa_change));
             }
-        }
     }
 
     Ok(variants)
