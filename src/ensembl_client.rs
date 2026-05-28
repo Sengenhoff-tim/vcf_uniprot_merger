@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use anyhow::{Context, Result, anyhow};
+use std::collections::HashMap;
 use std::io::Write;
 
-use futures::{stream, StreamExt};
+use futures::{StreamExt, stream};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -29,10 +29,7 @@ pub async fn fetch_sequences<W: Write>(
     mut variants: HashMap<u32, Vec<Variant>>,
     mut writer: W,
 ) -> Result<()> {
-    let ids: Vec<String> = variants
-        .keys()
-        .map(|&n| format!("ENST{:011}", n))
-        .collect();
+    let ids: Vec<String> = variants.keys().map(|&n| format!("ENST{:011}", n)).collect();
 
     let requests = ids.chunks(MAX_POST_SIZE);
 
@@ -58,7 +55,10 @@ pub async fn fetch_sequences<W: Write>(
 
         for record in batch {
             if record.molecule != "protein" {
-                return Err(anyhow!("Expected molecule type 'protein', got '{}'", record.molecule));
+                return Err(anyhow!(
+                    "Expected molecule type 'protein', got '{}'",
+                    record.molecule
+                ));
             }
             let key = record
                 .query
@@ -67,17 +67,9 @@ pub async fn fetch_sequences<W: Write>(
                 .parse::<u32>()
                 .context("invalid ENST numeric part")?;
 
-            let var = variants
-                .remove(&key)
-                .context("missing variant for key")?;
+            let var = variants.remove(&key).context("missing variant for key")?;
 
-            build_dummy_entry(
-                &record.id,
-                var,
-                &record.seq,
-                &masses_dict,
-                &mut writer,
-            )?;
+            build_dummy_entry(&record.id, var, &record.seq, &masses_dict, &mut writer)?;
         }
     }
 

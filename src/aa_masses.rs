@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use anyhow::{Context, Result};
+use std::collections::HashMap;
 
 pub struct AminoMasses {
     masses: HashMap<char, f64>,
@@ -30,7 +30,6 @@ impl AminoMasses {
             ('Y', 163.1760),
             ('W', 186.2132),
             ('O', 237.3018),
-
             ('J', 113.1594),
             ('X', 0.0),
             ('Z', 128.6231),

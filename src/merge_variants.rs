@@ -1,10 +1,10 @@
+use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::io::{BufRead, Write};
-use regex::Regex;
 
 use crate::variant::Variant;
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 
 pub fn add_variants<R, W>(
     reader: R,
@@ -15,10 +15,10 @@ where
     R: BufRead,
     W: Write,
 {
-    let regex_enst = Regex::new(r"^ENST\d{11}(?:\.\d+)?$")
-        .context("Failed to compile ENST regex")?;
-    let regex_aa_change = Regex::new(r"^([A-Z]+) -> ([A-Z]+)")
-        .context("Failed to compile AA change regex")?;
+    let regex_enst =
+        Regex::new(r"^ENST\d{11}(?:\.\d+)?$").context("Failed to compile ENST regex")?;
+    let regex_aa_change =
+        Regex::new(r"^([A-Z]+) -> ([A-Z]+)").context("Failed to compile AA change regex")?;
 
     let mut insert_candidates: Vec<&[Variant]> = Vec::new();
     let mut global_variants_inserted: HashSet<u32> = HashSet::new();
@@ -30,24 +30,23 @@ where
     let mut aa_change_line: Option<String> = None;
 
     for (line_num, line_result) in reader.lines().enumerate() {
-        let line = line_result.context(format!("Failed to read line {}", line_num+1))?;
+        let line = line_result.context(format!("Failed to read line {}", line_num + 1))?;
 
-        if line.starts_with("ID") 
-            || line.starts_with("AC") 
-            || (write_seq && !line.starts_with("//")) {
-
+        if line.starts_with("ID")
+            || line.starts_with("AC")
+            || (write_seq && !line.starts_with("//"))
+        {
             writeln!(writer, "{}", line)?;
             continue;
         }
 
-        if line.starts_with("SQ"){
+        if line.starts_with("SQ") {
             for candidate_slice in insert_candidates.drain(..) {
                 for candidate in candidate_slice {
                     if !variants_in_entry.contains(candidate) {
-
                         write!(writer, "{}", candidate.to_str_unchecked())?;
                     }
-                } 
+                }
             }
 
             writeln!(writer, "{}", line)?;
@@ -68,8 +67,14 @@ where
         }
 
         if line.starts_with("DR   Ensembl;") {
-            collect_enst_variants(&line, &regex_enst, variants, &mut global_variants_inserted, &mut insert_candidates)
-                .context(format!("Failed to parse DR line {}", line_num+1))?;
+            collect_enst_variants(
+                &line,
+                &regex_enst,
+                variants,
+                &mut global_variants_inserted,
+                &mut insert_candidates,
+            )
+            .context(format!("Failed to parse DR line {}", line_num + 1))?;
 
             continue;
         }
@@ -78,60 +83,59 @@ where
             writeln!(writer, "{}", line)?;
 
             if !insert_candidates.is_empty() {
-                
-                if let Some(pos) = aa_change_pos{
-                    let segment = line.get(21..)
+                if let Some(pos) = aa_change_pos {
+                    let segment = line
+                        .get(21..)
                         .and_then(|s| s.split_whitespace().next())
-                        .context(format!("Failed to read FT line {}", line_num+1))?;
+                        .context(format!("Failed to read FT line {}", line_num + 1))?;
 
                     if let Some(ref mut aa_change) = aa_change_line {
                         if !segment.starts_with("/") {
                             aa_change.push_str(line.get(21..).unwrap());
-                        }
-                        else {
-                            if let Some(caps) = regex_aa_change.captures(aa_change.get(28..).unwrap()) {
+                        } else {
+                            if let Some(caps) =
+                                regex_aa_change.captures(aa_change.get(28..).unwrap())
+                            {
                                 let g1_bytes = caps[1].as_bytes();
                                 let g2_bytes = caps[2].as_bytes();
-                                
-                                variants_in_entry.insert(
-                                    Variant {
-                                        pos,
-                                        aa_ref: g1_bytes.to_vec(),
-                                        aa_new: g2_bytes.to_vec(),
-                                    }
-                                );
-                            }  
+
+                                variants_in_entry.insert(Variant {
+                                    pos,
+                                    aa_ref: g1_bytes.to_vec(),
+                                    aa_new: g2_bytes.to_vec(),
+                                });
+                            }
                             aa_change_pos = None;
                             aa_change_line = None;
                         }
-                        
-                    }  
-                    else if segment.starts_with("/note="){
+                    } else if segment.starts_with("/note=") {
                         aa_change_line = Some(line);
                     }
-                }
-                else {
-                    let mut parts = line.get(2..)
+                } else {
+                    let mut parts = line
+                        .get(2..)
                         .map(|s| s.split_whitespace())
-                        .context(format!("Failed to read FT line {}", line_num+1))?;
-                    let segment = parts.next().context(format!("Failed to read FT line {}", line_num+1))?;
-                    
+                        .context(format!("Failed to read FT line {}", line_num + 1))?;
+                    let segment = parts
+                        .next()
+                        .context(format!("Failed to read FT line {}", line_num + 1))?;
 
                     if segment.starts_with("VARIANT") || segment.starts_with("VAR_SEQ") {
-                        let position = parts.next().context(format!("Failed to read FT line {}", line_num+1))?;
+                        let position = parts
+                            .next()
+                            .context(format!("Failed to read FT line {}", line_num + 1))?;
 
                         if position.starts_with("<") {
-                            anyhow::bail!(format!("Failed to read FT line {}", line_num+1));
-                        }
-                        else {
+                            anyhow::bail!(format!("Failed to read FT line {}", line_num + 1));
+                        } else {
                             let pos = position
                                 .split(".")
                                 .next()
-                                .context(format!("Failed to parse FT line {}", line_num+1))?;
+                                .context(format!("Failed to parse FT line {}", line_num + 1))?;
 
                             let pos_u32 = pos
                                 .parse::<u32>()
-                                .context(format!("Failed to parse FT line {}", line_num+1))?;
+                                .context(format!("Failed to parse FT line {}", line_num + 1))?;
 
                             aa_change_pos = Some(pos_u32);
                         }

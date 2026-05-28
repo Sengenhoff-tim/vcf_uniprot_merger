@@ -1,19 +1,19 @@
+use anyhow::Result;
+use flate2::{Compression, write::GzEncoder};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use anyhow::{Result};
-use flate2::{Compression, write::GzEncoder};
 
-mod cli;
-mod variant;
-mod read_bcftools;
-mod parse_uniprot;
 mod aa_masses;
+mod cli;
 mod ensembl_client;
 mod merge_variants;
+mod parse_uniprot;
+mod read_bcftools;
+mod variant;
 mod writer_wrapper;
 
 use crate::merge_variants::add_variants;
-use crate::{read_bcftools::build_variant_dict};
+use crate::read_bcftools::build_variant_dict;
 use crate::writer_wrapper::WriterWrapper;
 
 use crate::ensembl_client::fetch_sequences;
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bcftools_file = File::open(config.bcftools_input_path)?;
     let bcftool_reader = BufReader::new(bcftools_file);
 
-    let mut variants= build_variant_dict(bcftool_reader)?;
+    let mut variants = build_variant_dict(bcftool_reader)?;
 
     let uniprot_file = File::open(config.uniprot_path)?;
     let uniprot_reader = BufReader::new(uniprot_file);

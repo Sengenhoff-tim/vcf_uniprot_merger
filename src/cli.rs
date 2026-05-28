@@ -1,6 +1,6 @@
 // cli.rs
-use clap::Parser;
 use anyhow::Result;
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct Config {

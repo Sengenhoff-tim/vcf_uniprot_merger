@@ -2,22 +2,16 @@
 pub struct Variant {
     pub pos: u32,
     pub aa_ref: Vec<u8>,
-    pub aa_new: Vec<u8>
+    pub aa_new: Vec<u8>,
 }
 
 impl Variant {
     pub fn from_string_unchecked(aa_str: &str) -> Variant {
         let (left, right) = aa_str.split_once('>').unwrap();
 
-        let l = left
-            .bytes()
-            .position(|b| b.is_ascii_alphabetic())
-            .unwrap();
+        let l = left.bytes().position(|b| b.is_ascii_alphabetic()).unwrap();
 
-        let r = right
-            .bytes()
-            .position(|b| b.is_ascii_alphabetic())
-            .unwrap();
+        let r = right.bytes().position(|b| b.is_ascii_alphabetic()).unwrap();
 
         let (pos, aa_ref) = left.split_at(l);
 
