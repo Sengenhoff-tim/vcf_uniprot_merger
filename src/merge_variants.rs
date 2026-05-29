@@ -34,6 +34,8 @@ where
 
         if line.starts_with("ID")
             || line.starts_with("AC")
+            || line.starts_with("CC")
+            || line.starts_with("DE")
             || (write_seq && !line.starts_with("//"))
         {
             writeln!(writer, "{}", line)?;
