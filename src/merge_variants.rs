@@ -35,7 +35,17 @@ where
         if line.starts_with("ID")
             || line.starts_with("AC")
             || line.starts_with("CC")
+            || line.starts_with("DT")
             || line.starts_with("DE")
+            || line.starts_with("OS")
+            || line.starts_with("OC")
+            || line.starts_with("OX")
+            || line.starts_with("RN")
+            || line.starts_with("RP")
+            || line.starts_with("RG")
+            || line.starts_with("RA")
+            || line.starts_with("RL")
+            || line.starts_with("PE")
             || (write_seq && !line.starts_with("//"))
         {
             writeln!(writer, "{}", line)?;

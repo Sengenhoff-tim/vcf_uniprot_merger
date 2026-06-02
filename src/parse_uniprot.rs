@@ -20,7 +20,19 @@ pub fn build_dummy_entry<W: std::io::Write>(
     let entry = format!(
         "ID   {}              Unreviewed;          {} AA.\n\
         AC   {};\n\
+        DT   1-JAN-1970, integrated into DUMMY.\n\
+        DT   1-JAN-1970, sequence version 1.\n\
+        DT   1-JAN-1970, entry version 1.\n\
         DE   RecName: Full={}.\n\
+        OS   dummy organism (DUMMY).\n\
+        OC   Unclassified; dummy (DUMMY).\n\
+        OX   NCBI_TaxID=0; dummy (DUMMY).\n\
+        RN   [1]\n\
+        RP   SEQUENCE.\n\
+        RG   dummy group;\n\
+        RA   dummy authors;\n\
+        RL   Unpublished.\n\
+        PE   4: Predicted;\n\
         {}\
         {}\
         //\n",
