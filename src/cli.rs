@@ -13,6 +13,12 @@ pub struct Config {
     #[arg(short = 'u', long = "uniprot_input_path", value_name = "PATH")]
     pub uniprot_path: String,
 
+    #[arg(short = 'f', long = "ensembl_fallback", value_name = "BOOLEAN")]
+    pub ensembl_fallback: bool,
+
+    #[arg(short = 'c', long = "confirmed_only", value_name = "BOOLEAN")]
+    pub confirmed_only: bool,
+
     #[arg(short = 'z', long = "zip", value_name = "BOOLEAN")]
     pub zip: bool,
 }

@@ -1,34 +1,136 @@
+use anyhow::{Result, bail};
+
 #[derive(Eq, PartialEq, Hash)]
 pub struct Variant {
-    pub pos: u32,
-    pub aa_ref: Vec<u8>,
-    pub aa_new: Vec<u8>,
+    pub pos_start: u32,
+    pub pos_end: Option<u32>,
+    pub aa_ref: String,
+    pub aa_new: String,
 }
 
 impl Variant {
-    pub fn from_string_unchecked(aa_str: &str) -> Variant {
-        let (left, right) = aa_str.split_once('>').unwrap();
+    pub fn from_match(pos: u32, aa_ref: &str, aa_new: &str) -> Variant {
 
-        let l = left.bytes().position(|b| b.is_ascii_alphabetic()).unwrap();
-
-        let r = right.bytes().position(|b| b.is_ascii_alphabetic()).unwrap();
-
-        let (pos, aa_ref) = left.split_at(l);
-
+        let pos_end = if aa_ref.len() > 1 {
+            Some(pos + aa_ref.len() as u32)
+        } else {
+            None
+        };
+        
         Variant {
-            pos: pos.parse::<u32>().unwrap(),
-            aa_ref: aa_ref.as_bytes().to_vec(),
-            aa_new: right.as_bytes()[r..].to_vec(),
+            pos_start: pos,
+            pos_end: pos_end,
+            aa_ref: aa_ref.to_string(),
+            aa_new: aa_new.to_string(),
         }
     }
 
-    pub fn to_str_unchecked(&self) -> String {
-        format!(
-            "FT   VARIANT         {}\n\
-            FT                   /note=\"{} -> {}\"\n",
-            self.pos,
-            std::str::from_utf8(&self.aa_ref).unwrap(),
-            std::str::from_utf8(&self.aa_new).unwrap(),
-        )
+    pub fn to_uniprot(&self, seq_len: u32) -> Result<String> {
+
+    if let Some(stop_loss) = self.aa_ref.find("*") {
+        if self.pos_start == seq_len + 1{
+            return Ok(
+                format!(
+                    "FT   VAR_SEQ         {}\n\
+                    FT                   /note=\"{} -> {}\"\n",
+                    self.pos_start,
+                    self.aa_ref,
+                    self.aa_new,
+                )
+            )
+        }
+        else {
+            bail!(format!("Suspicious sequence length {} for stop loss position {}", seq_len, stop_loss))
+        }
     }
+
+    if let Some(stop_gain) = self.aa_new.find("*") {
+        if stop_gain as u32 == self.pos_start {
+            return Ok(
+                format!(
+                    "FT   VAR_SEQ         {}\n\
+                    FT                   /note=\"Missing in sample\"\n",
+                    self.pos_start
+                )
+            )
+
+        }
+        else {
+            return Ok(
+                format!(
+                    "{}FT   VAR_SEQ         {}..{}\n\
+                    FT                   /note=\"Missing in sample\"\n",
+                    format_variant(self.pos_start, self.pos_end.map(|x| x -1), &self.aa_ref, &self.aa_new),
+                    self.pos_end.unwrap(),
+                    seq_len
+                )
+            )
+        }
+    }
+
+    Ok(format_variant(self.pos_start, self.pos_end, &self.aa_ref, &self.aa_new))
 }
+
+
+}
+
+
+fn format_variant(
+    pos_start: u32,
+    pos_end: Option<u32>,
+    aa_ref: &str,
+    aa_new: &str,
+) -> String {
+    let pos = pos_end
+        .map(|end| format!("{pos_start}..{end}"))
+        .unwrap_or_else(|| pos_start.to_string());
+
+    let note = format!("{aa_ref} -> {aa_new}");
+
+    const LINE_LIMIT: usize = 80;
+    const PREFIX: &str = "FT                   /note=\"";
+    const CONTINUATION: &str = "FT                   ";
+
+    let mut result = format!("FT   VARIANT         {pos}\n");
+
+    let mut remaining = note.as_str();
+    let mut first_line = true;
+
+    while !remaining.is_empty() {
+        let prefix = if first_line {
+            PREFIX
+        } else {
+            CONTINUATION
+        };
+
+        let available = if remaining.len() + prefix.len() + 1 <= LINE_LIMIT {
+            LINE_LIMIT - prefix.len() - 1 // reserve room for closing quote
+        } else {
+            LINE_LIMIT - prefix.len()
+        };
+
+        let split_at = if remaining.len() > available {
+            remaining[..available]
+                .rfind(' ')
+                .unwrap_or(available)
+        } else {
+            remaining.len()
+        };
+
+        let chunk = &remaining[..split_at];
+        remaining = remaining[split_at..].trim_start();
+
+        result.push_str(prefix);
+        result.push_str(chunk);
+
+        if remaining.is_empty() {
+            result.push('"');
+        }
+
+        result.push('\n');
+        first_line = false;
+    }
+
+    result
+}
+

@@ -12,7 +12,7 @@ pub fn build_dummy_entry<W: std::io::Write>(
 ) -> Result<()> {
     let mut ft_lines = String::new();
     for variant in var {
-        ft_lines.push_str(&variant.to_str_unchecked());
+        ft_lines.push_str(&variant.to_uniprot(seq.len() as u32)?);
     }
 
     let seqs = format_seq(seq, masses_dict)?;

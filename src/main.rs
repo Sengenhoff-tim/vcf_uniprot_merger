@@ -40,11 +40,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut output_writer = BufWriter::new(encoder);
 
-    let inserted = add_variants(uniprot_reader, &mut output_writer, &variants)?;
+    let inserted = add_variants(uniprot_reader, &mut output_writer, &variants, config.confirmed_only)?;
 
-    variants.retain(|key, _value| !inserted.contains(key));
+    if config.ensembl_fallback {
+        variants.retain(|key, _value| !inserted.contains(key));
 
-    fetch_sequences(variants, &mut output_writer).await?;
+        fetch_sequences(variants, &mut output_writer).await?;
+    } 
 
     Ok(())
 }
