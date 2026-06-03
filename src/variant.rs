@@ -27,7 +27,7 @@ impl Variant {
 
     pub fn to_uniprot(&self, seq_len: u32) -> Result<String> {
 
-    if let Some(stop_loss) = self.aa_ref.find("*") {
+    if let Some(stop_pos_ref) = self.aa_ref.find("*") {
         if self.pos_start == seq_len + 1{
             return Ok(
                 format!(
@@ -39,13 +39,13 @@ impl Variant {
                 )
             )
         }
-        else {
-            bail!(format!("Suspicious sequence length {} for stop loss position {}; Old seq: {}, new seq: {}", seq_len, stop_loss, self.aa_ref, self.aa_new))
+        else if stop_pos_ref > seq_len as usize + 1{
+            bail!(format!("Suspicious sequence length {} for reference stop position {}; Old seq: {}, new seq: {}", seq_len, stop_pos_ref, self.aa_ref, self.aa_new))
         }
     }
 
-    if let Some(stop_gain) = self.aa_new.find("*") {
-        if stop_gain as u32 == self.pos_start {
+    if let Some(stop_pos_new) = self.aa_new.find("*") {
+        if stop_pos_new as u32 == self.pos_start {
             return Ok(
                 format!(
                     "FT   VAR_SEQ         {}\n\
