@@ -64,7 +64,7 @@ where
             for candidate_slice in insert_candidates.drain(..) {
                 for candidate in candidate_slice {
                     if !variants_in_entry.contains(candidate) {
-                        write!(writer, "{}", candidate.to_uniprot(seq_len)?)?;
+                        write!(writer, "{}", candidate.to_uniprot(seq_len)?);
                     }
                 }
             }

@@ -40,7 +40,7 @@ impl Variant {
             )
         }
         else {
-            bail!(format!("Suspicious sequence length {} for stop loss position {}", seq_len, stop_loss))
+            bail!(format!("Suspicious sequence length {} for stop loss position {}; Old seq: {}, new seq: {}", seq_len, stop_loss, self.aa_ref, self.aa_new))
         }
     }
 
