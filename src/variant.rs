@@ -55,17 +55,6 @@ impl Variant {
             )
 
         }
-        else {
-            return Ok(
-                format!(
-                    "{}FT   VAR_SEQ         {}..{}\n\
-                    FT                   /note=\"Missing in sample\"\n",
-                    format_variant(self.pos_start, self.pos_end.map(|x| x -1), &self.aa_ref, &self.aa_new),
-                    self.pos_end.unwrap(),
-                    seq_len
-                )
-            )
-        }
     }
 
     Ok(format_variant(self.pos_start, self.pos_end, &self.aa_ref, &self.aa_new))
