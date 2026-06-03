@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, bail};
 use std::{
-    collections::HashMap, fmt::format, io::{BufRead, BufReader}
+    collections::HashMap, io::{BufRead, BufReader}
 };
 
 use regex::Regex;

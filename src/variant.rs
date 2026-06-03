@@ -39,9 +39,11 @@ impl Variant {
                 )
             )
         }
+        /* 
         else if stop_pos_ref > seq_len as usize + 1{
             bail!(format!("Suspicious sequence length {} for reference stop position {}; Old seq: {}, new seq: {}", seq_len, stop_pos_ref, self.aa_ref, self.aa_new))
         }
+        */
     }
 
     if let Some(stop_pos_new) = self.aa_new.find("*") {
