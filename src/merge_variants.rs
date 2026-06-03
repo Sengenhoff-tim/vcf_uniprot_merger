@@ -55,7 +55,7 @@ where
 
         if line.starts_with("SQ") {
             let seq_len = line[13..]
-                .split(" ")
+                .split_whitespace()
                 .next()
                 .context(format!("Malforemd SQ line {}", line_num + 1))?
                 .parse::<u32>()
