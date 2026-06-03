@@ -29,9 +29,11 @@ pub fn build_variant_dict<R: std::io::Read>(
             let pos1 = caps[1].parse::<u32>()?;
             let pos2 = caps[3].parse::<u32>()?;
             
+            /*
             if pos1 != pos2 {
                 bail!("pos old {} != pos new {} in line {}", pos1, pos2, line_idx);
             }
+             */
             
             let aa_ref = &caps[2];
             let aa_new = &caps[4];
