@@ -10,7 +10,7 @@ pub fn add_variants<R, W>(
     reader: R,
     writer: &mut W,
     variants: &HashMap<u32, Vec<Variant>>,
-    confirmed_only: bool
+    confirmed_only: bool,
 ) -> Result<HashSet<u32>>
 where
     R: BufRead,
@@ -60,7 +60,7 @@ where
                 .context(format!("Malforemd SQ line {}", line_num + 1))?
                 .parse::<u32>()
                 .context(format!("Malforemd SQ line {}", line_num + 1))?;
-            
+
             for candidate_slice in insert_candidates.drain(..) {
                 for candidate in candidate_slice {
                     if !variants_in_entry.contains(candidate) {
@@ -100,11 +100,9 @@ where
         }
 
         if line.starts_with("FT") && !confirmed_only {
-            
             writeln!(writer, "{}", line)?;
 
             if !insert_candidates.is_empty() {
-
                 //CASE: FT VARIANT or VAR_SEQ line with position found in previous iteration
                 if let Some(pos) = aa_change_pos {
                     let segment = line
@@ -112,9 +110,7 @@ where
                         .and_then(|s| s.split_whitespace().next())
                         .context(format!("Failed to read FT line {}", line_num + 1))?;
 
-
                     if let Some(ref mut aa_change) = aa_change_line {
-
                         //CASE: aa_change line complete -> insert complete entry
                         if segment.starts_with("/") {
                             if let Some(caps) =
@@ -132,20 +128,17 @@ where
                             }
                             aa_change_pos = None;
                             aa_change_line = None;
-                        } 
-                        
+                        }
                         //CASE: continuation of aa_change line from previous iteration
                         else {
-                            aa_change.push_str(line.get(21..).unwrap()); 
+                            aa_change.push_str(line.get(21..).unwrap());
                         }
                     }
-
                     //CASE: in FT line after VARIANT or VAR_SEQ
                     else if segment.starts_with("/note=") {
                         aa_change_line = Some(line);
                     }
                 }
-
                 //CASE: Check if FT line containing VARIANT or VAR_SEQ. Sets aa_change_pos
                 else {
                     let mut parts = line
@@ -159,7 +152,6 @@ where
                         .context(format!("Failed to read FT line {}", line_num + 1))?;
 
                     if segment.starts_with("VARIANT") || segment.starts_with("VAR_SEQ") {
-
                         //attempts to set aa change position
                         let position_candidate = parts
                             .next()
@@ -170,7 +162,8 @@ where
                         } else {
                             let mut parts = position_candidate.split("..");
 
-                            let pos_start = parts.next()
+                            let pos_start = parts
+                                .next()
                                 .context(format!("Failed to parse FT line {}", line_num + 1))?;
 
                             let pos_end = parts.next();
@@ -182,8 +175,10 @@ where
 
                             let pos_end_u32 = match pos_end.map(|p| p.parse::<u32>()) {
                                 Some(Ok(val)) => Some(val),
-                                Some(Err(_)) => { continue; },
-                                None => None
+                                Some(Err(_)) => {
+                                    continue;
+                                }
+                                None => None,
                             };
 
                             aa_change_pos = Some((pos_start_u32, pos_end_u32));
