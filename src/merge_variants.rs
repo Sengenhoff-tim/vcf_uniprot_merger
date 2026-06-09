@@ -25,7 +25,9 @@ where
     let mut global_variants_inserted: HashSet<u32> = HashSet::new();
     let mut variants_in_entry: Vec<Variant> = Vec::new();
 
-    let mut write_seq = false;
+    let mut seq = String::new();
+    let mut seq_len: u32 = 0;
+    let mut collect_seq = false;
 
     let mut aa_change_pos: Option<(u32, Option<u32>)> = None;
     let mut aa_change_line: Option<String> = None;
@@ -47,41 +49,51 @@ where
             || line.starts_with("RA")
             || line.starts_with("RL")
             || line.starts_with("PE")
-            || (write_seq && !line.starts_with("//"))
         {
             writeln!(writer, "{}", line)?;
             continue;
         }
 
+        if collect_seq && !line.starts_with("//") {
+            seq.push_str(&line);
+        }
+
         if line.starts_with("SQ") {
-            let seq_len = line[13..]
+
+            seq_len = line[13..]
                 .split_whitespace()
                 .next()
                 .context(format!("Malforemd SQ line {}", line_num + 1))?
                 .parse::<u32>()
                 .context(format!("Malforemd SQ line {}", line_num + 1))?;
 
-            for candidate_slice in insert_candidates.drain(..) {
-                for candidate in candidate_slice {
-                    if !variants_in_entry.contains(candidate) {
-                        write!(writer, "{}", candidate.to_uniprot(seq_len)?)?;
-                    }
-                }
-            }
+            seq.push_str(&line);
 
-            writeln!(writer, "{}", line)?;
-
-            variants_in_entry.clear();
-
-            write_seq = true;
+            collect_seq = true;
 
             continue;
         }
 
         if line.starts_with("//") {
-            writeln!(writer, "{}", line)?;
+            let last_aa = seq.trim_end().chars().last();
 
-            write_seq = false;
+            if let Some(last_aa_valid) = last_aa {
+                for candidate_slice in insert_candidates.drain(..) {
+                    for mut candidate in candidate_slice.iter().cloned() {
+                        candidate.normalize(seq_len as u32, last_aa_valid);
+                        if !variants_in_entry.contains(&candidate) || confirmed_only{
+                            write!(writer, "{}", candidate.to_uniprot(seq_len)?)?;
+                        }
+                    }
+                }
+            }
+            //TODO add failure logging
+            writeln!(writer, "{}{}", seq, line)?;
+            variants_in_entry.clear();
+
+            seq.clear();
+
+            collect_seq = false;
 
             continue;
         }
@@ -99,9 +111,10 @@ where
             continue;
         }
 
-        if line.starts_with("FT") && !confirmed_only {
-            writeln!(writer, "{}", line)?;
-
+        if line.starts_with("FT") {
+            if !confirmed_only {
+                writeln!(writer, "{}", line)?;
+            }
             if !insert_candidates.is_empty() {
                 //CASE: FT VARIANT or VAR_SEQ line with position found in previous iteration
                 if let Some(pos) = aa_change_pos {
@@ -113,8 +126,9 @@ where
                     if let Some(ref mut aa_change) = aa_change_line {
                         //CASE: aa_change line complete -> insert complete entry
                         if segment.starts_with("/") {
+                            let note = aa_change.get(28..).unwrap();
                             if let Some(caps) =
-                                regex_aa_change.captures(aa_change.get(28..).unwrap())
+                                regex_aa_change.captures(note)
                             {
                                 let aa_ref = &caps[1];
                                 let aa_new = &caps[2];
@@ -124,6 +138,13 @@ where
                                     pos_end: pos.1,
                                     aa_ref: aa_ref.to_string(),
                                     aa_new: aa_new.to_string(),
+                                });
+                            } else if note.starts_with("Missing"){
+                                variants_in_entry.push(Variant {
+                                    pos_start: pos.0,
+                                    pos_end: pos.1,
+                                    aa_ref: String::new(),
+                                    aa_new: String::new(),
                                 });
                             }
                             aa_change_pos = None;
@@ -139,6 +160,7 @@ where
                         aa_change_line = Some(line);
                     }
                 }
+
                 //CASE: Check if FT line containing VARIANT or VAR_SEQ. Sets aa_change_pos
                 else {
                     let mut parts = line

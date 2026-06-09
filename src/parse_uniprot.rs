@@ -11,11 +11,19 @@ pub fn build_dummy_entry<W: std::io::Write>(
     mut writer: W,
 ) -> Result<()> {
     let mut ft_lines = String::new();
-    for variant in var {
-        ft_lines.push_str(&variant.to_uniprot(seq.len() as u32)?);
-    }
+
+    let last_aa = seq.trim_end().chars().last();
 
     let seqs = format_seq(seq, masses_dict)?;
+
+    
+    if let Some(last_aa_valid) = last_aa {
+        for mut variant in var {
+            variant.normalize(seq.len() as u32, last_aa_valid);
+            ft_lines.push_str(&variant.to_uniprot(seq.len() as u32)?);
+        }
+    }
+    
 
     let entry = format!(
         "ID   {}              Unreviewed;          {} AA.\n\

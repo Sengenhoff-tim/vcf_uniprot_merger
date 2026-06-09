@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-#[derive(Eq, PartialEq, Hash)]
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub struct Variant {
     pub pos_start: u32,
     pub pos_end: Option<u32>,
@@ -11,7 +11,7 @@ pub struct Variant {
 impl Variant {
     pub fn from_match(pos: u32, aa_ref: &str, aa_new: &str) -> Variant {
         let pos_end = if aa_ref.len() > 1 {
-            Some(pos + aa_ref.len() as u32)
+            Some(pos + aa_ref.len() as u32 -1)
         } else {
             None
         };
@@ -24,53 +24,65 @@ impl Variant {
         }
     }
 
+    pub fn normalize(&mut self, seq_len: u32, last_seq_char: char){
+        if self.aa_ref.ends_with("*") {
+            //CASE *->AA*
+            let combined = format!("{}{}", last_seq_char, self.aa_new.trim_end_matches('*'));
+            self.pos_start = seq_len;
+            self.pos_end = Some(seq_len);
+            self.aa_ref = last_seq_char.to_string();
+            self.aa_new = combined;
+        }
+        
+        if let Some(_) = self.aa_new.find("*") {
+            self.pos_end = Some(seq_len);
+            //CASE A->* & AA->*
+            if self.aa_new.len() == 1 {
+                self.aa_new = String::new();
+                self.aa_ref = String::new();
+
+                return;
+            }
+            //CASE A->A*
+            //CASE AA->A*
+            self.aa_new = self.aa_new.trim_end_matches('*').to_string();
+        }
+        //CASE A->A
+        //CASE A->AA
+        //CASE AA->A
+        //CASE AA->AA
+    }
+
     pub fn to_uniprot(&self, seq_len: u32) -> Result<String> {
-        if let Some(_stop_pos_ref) = self.aa_ref.find("*")
-            && self.pos_start == seq_len + 1
-        {
-            return Ok(format!(
-                "FT   VAR_SEQ         {}\n\
-                    FT                   /note=\"{} -> {}\"\n",
-                self.pos_start, self.aa_ref, self.aa_new,
-            ));
+        if self.aa_ref.len() == 0 && self.aa_new.len() == 0 {
+        return Ok(format!(
+                "FT   VAR_SEQ         {}..{}\n\
+                FT                   /note=\"Missing in sample\"\n",
+                self.pos_start, seq_len
+            ))
         }
-        /*
-        else if stop_pos_ref > seq_len as usize + 1{
-            bail!(format!("Suspicious sequence length {} for reference stop position {}; Old seq: {}, new seq: {}", seq_len, stop_pos_ref, self.aa_ref, self.aa_new))
-        }
-        */
-
-        if let Some(stop_pos_new) = self.aa_new.find("*")
-            && stop_pos_new as u32 == self.pos_start
-        {
-            return Ok(format!(
-                "FT   VAR_SEQ         {}\n\
-                    FT                   /note=\"Missing in sample\"\n",
-                self.pos_start
-            ));
-        }
-
+        
         Ok(format_variant(
             self.pos_start,
             self.pos_end,
             &self.aa_ref,
             &self.aa_new,
         ))
+        
     }
 }
 
 fn format_variant(pos_start: u32, pos_end: Option<u32>, aa_ref: &str, aa_new: &str) -> String {
-    let pos = pos_end
-        .map(|end| format!("{pos_start}..{end}"))
-        .unwrap_or_else(|| pos_start.to_string());
+    let mut result = pos_end
+        .filter(|end| *end != pos_start)
+        .map(|end| format!("FT   VAR_SEQ         {}..{}\n", pos_start, end))
+        .unwrap_or_else(|| format!("FT   VARIANT         {}\n", pos_start));
 
     let note = format!("{aa_ref} -> {aa_new}");
 
     const LINE_LIMIT: usize = 80;
     const PREFIX: &str = "FT                   /note=\"";
     const CONTINUATION: &str = "FT                   ";
-
-    let mut result = format!("FT   VARIANT         {pos}\n");
 
     let mut remaining = note.as_str();
     let mut first_line = true;
