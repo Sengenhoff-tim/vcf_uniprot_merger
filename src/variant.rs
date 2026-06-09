@@ -11,7 +11,7 @@ pub struct Variant {
 impl Variant {
     pub fn from_match(pos: u32, aa_ref: &str, aa_new: &str) -> Variant {
         let pos_end = if aa_ref.len() > 1 {
-            Some(pos + aa_ref.len() as u32 -1)
+            Some(pos + aa_ref.len() as u32 - 1)
         } else {
             None
         };
@@ -24,7 +24,7 @@ impl Variant {
         }
     }
 
-    pub fn normalize(&mut self, seq_len: u32, last_seq_char: char){
+    pub fn normalize(&mut self, seq_len: u32, last_seq_char: char) {
         if self.aa_ref.ends_with("*") {
             //CASE *->AA*
             let combined = format!("{}{}", last_seq_char, self.aa_new.trim_end_matches('*'));
@@ -33,8 +33,8 @@ impl Variant {
             self.aa_ref = last_seq_char.to_string();
             self.aa_new = combined;
         }
-        
-        if let Some(_) = self.aa_new.find("*") {
+
+        if self.aa_new.find("*").is_some() {
             self.pos_end = Some(seq_len);
             //CASE A->* & AA->*
             if self.aa_new.len() == 1 {
@@ -54,21 +54,20 @@ impl Variant {
     }
 
     pub fn to_uniprot(&self, seq_len: u32) -> Result<String> {
-        if self.aa_ref.len() == 0 && self.aa_new.len() == 0 {
-        return Ok(format!(
+        if self.aa_ref.is_empty() && self.aa_new.is_empty() {
+            return Ok(format!(
                 "FT   VAR_SEQ         {}..{}\n\
                 FT                   /note=\"Missing in sample\"\n",
                 self.pos_start, seq_len
-            ))
+            ));
         }
-        
+
         Ok(format_variant(
             self.pos_start,
             self.pos_end,
             &self.aa_ref,
             &self.aa_new,
         ))
-        
     }
 }
 
