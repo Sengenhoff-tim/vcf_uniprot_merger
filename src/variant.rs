@@ -1,12 +1,18 @@
+use derivative::Derivative;
 use anyhow::Result;
 
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Derivative, Clone)]
+#[derivative(PartialEq, Hash)]
 pub struct Variant {
     pub pos_start: u32,
     pub pos_end: Option<u32>,
     pub aa_ref: String,
     pub aa_new: String,
+    #[derivative(PartialEq = "ignore", Hash = "ignore")]
+    pub id: String
 }
+
+impl Eq for Variant {}
 
 impl Variant {
     pub fn from_match(pos: u32, aa_ref: &str, aa_new: &str) -> Variant {
@@ -21,6 +27,7 @@ impl Variant {
             pos_end,
             aa_ref: aa_ref.to_string(),
             aa_new: aa_new.to_string(),
+            id: String::new()
         }
     }
 
@@ -57,8 +64,9 @@ impl Variant {
         if self.aa_ref.is_empty() && self.aa_new.is_empty() {
             return Ok(format!(
                 "FT   VAR_SEQ         {}..{}\n\
-                FT                   /note=\"Missing in sample\"\n",
-                self.pos_start, seq_len
+                FT                   /note=\"Missing in sample\"\n\
+                FT                   /id=\"{}\"\n",
+                self.pos_start, seq_len, self.id
             ));
         }
 
@@ -67,11 +75,12 @@ impl Variant {
             self.pos_end,
             &self.aa_ref,
             &self.aa_new,
+            &self.id
         ))
     }
 }
 
-fn format_variant(pos_start: u32, pos_end: Option<u32>, aa_ref: &str, aa_new: &str) -> String {
+fn format_variant(pos_start: u32, pos_end: Option<u32>, aa_ref: &str, aa_new: &str, id: &str) -> String {
     let mut result = pos_end
         .filter(|end| *end != pos_start)
         .map(|end| format!("FT   VAR_SEQ         {}..{}\n", pos_start, end))
@@ -114,6 +123,8 @@ fn format_variant(pos_start: u32, pos_end: Option<u32>, aa_ref: &str, aa_new: &s
         result.push('\n');
         first_line = false;
     }
+
+    result.push_str(&format!("FT                   /id=\"{}\"\n", id));
 
     result
 }

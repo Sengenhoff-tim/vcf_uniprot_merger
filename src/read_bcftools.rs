@@ -41,11 +41,12 @@ pub fn build_variant_dict<R: std::io::Read>(
             let aa_ref = &caps[2];
             let aa_new = &caps[4];
 
-            let variant = Variant::from_match(pos1, aa_ref, aa_new);
-            let vec = variants.entry(key).or_default();
+            let mut variant = Variant::from_match(pos1, aa_ref, aa_new);
+            let variants_for_id = variants.entry(key).or_default();
 
-            if !vec.contains(&variant) {
-                vec.push(variant);
+            if !variants_for_id.contains(&variant) {
+                variant.id = format!("{}:{}", variants_for_id.len(), id);
+                variants_for_id.push(variant);
             }
         }
     }
