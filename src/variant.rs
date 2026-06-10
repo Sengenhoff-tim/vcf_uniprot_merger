@@ -1,5 +1,5 @@
-use derivative::Derivative;
 use anyhow::Result;
+use derivative::Derivative;
 
 #[derive(Derivative, Clone)]
 #[derivative(PartialEq, Hash)]
@@ -9,7 +9,7 @@ pub struct Variant {
     pub aa_ref: String,
     pub aa_new: String,
     #[derivative(PartialEq = "ignore", Hash = "ignore")]
-    pub id: String
+    pub id: String,
 }
 
 impl Eq for Variant {}
@@ -27,7 +27,7 @@ impl Variant {
             pos_end,
             aa_ref: aa_ref.to_string(),
             aa_new: aa_new.to_string(),
-            id: String::new()
+            id: String::new(),
         }
     }
 
@@ -75,12 +75,18 @@ impl Variant {
             self.pos_end,
             &self.aa_ref,
             &self.aa_new,
-            &self.id
+            &self.id,
         ))
     }
 }
 
-fn format_variant(pos_start: u32, pos_end: Option<u32>, aa_ref: &str, aa_new: &str, id: &str) -> String {
+fn format_variant(
+    pos_start: u32,
+    pos_end: Option<u32>,
+    aa_ref: &str,
+    aa_new: &str,
+    id: &str,
+) -> String {
     let mut result = pos_end
         .filter(|end| *end != pos_start)
         .map(|end| format!("FT   VAR_SEQ         {}..{}\n", pos_start, end))
