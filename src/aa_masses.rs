@@ -50,7 +50,9 @@ impl AminoMasses {
         let mut total = 0.0;
 
         for (idx, aa) in seq.chars().enumerate() {
-            total += self.get(aa).context(format!("Failed to convert {} at position {}", aa, idx))?;
+            total += self
+                .get(aa)
+                .context(format!("Failed to convert {} at position {}", aa, idx))?;
         }
 
         total += 18.01524;

@@ -69,8 +69,7 @@ impl Variant {
                     FT                   /id=\"{}\"\n",
                     self.pos_start, seq_len, self.id
                 ));
-            }
-            else {
+            } else {
                 return Ok(format!(
                     "FT   VAR_SEQ         {}..{}\n\
                     FT                   /note=\"{}\"\n\

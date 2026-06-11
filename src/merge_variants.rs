@@ -278,7 +278,11 @@ fn push_entry(
         features_in_entry.insert(Variant {
             pos_start: change_pos.0,
             pos_end: change_pos.1,
-            aa_ref: note.to_string().strip_suffix('"').unwrap_or(&note).to_string(),
+            aa_ref: note
+                .to_string()
+                .strip_suffix('"')
+                .unwrap_or(note)
+                .to_string(),
             aa_new: String::new(),
             id: id.to_string(),
         });
