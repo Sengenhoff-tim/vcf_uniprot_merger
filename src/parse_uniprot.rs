@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 use crate::aa_masses::AminoMasses;
 use crate::variant::Variant;
@@ -14,7 +14,7 @@ pub fn build_dummy_entry<W: std::io::Write>(
 
     let last_aa = seq.trim_end().chars().last();
 
-    let seqs = format_seq(seq, masses_dict)?;
+    let seqs = format_seq(seq, masses_dict).context(format!("Failed for {}", enst))?;
 
     if let Some(last_aa_valid) = last_aa {
         for mut variant in var {

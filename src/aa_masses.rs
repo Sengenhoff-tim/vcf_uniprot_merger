@@ -49,8 +49,8 @@ impl AminoMasses {
     pub fn sequence_mass(&self, seq: &str) -> Result<f64> {
         let mut total = 0.0;
 
-        for aa in seq.chars() {
-            total += self.get(aa)?;
+        for (idx, aa) in seq.chars().enumerate() {
+            total += self.get(aa).context(format!("Failed to convert {} at position {}", aa, idx))?;
         }
 
         total += 18.01524;
