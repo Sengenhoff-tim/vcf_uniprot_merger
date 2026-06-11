@@ -101,7 +101,7 @@ pub async fn fetch_sequences<W: Write>(
 
             let var = variants.remove(&key).context("missing variant for key")?;
 
-            build_dummy_entry(&record.id, var, &record.seq, &masses_dict, &mut writer)?;
+            build_dummy_entry(&record.id, var, record.seq, &masses_dict, &mut writer)?;
         }
     }
 

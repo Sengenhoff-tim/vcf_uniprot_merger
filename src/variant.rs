@@ -61,13 +61,23 @@ impl Variant {
     }
 
     pub fn to_uniprot(&self, seq_len: u32) -> Result<String> {
-        if self.aa_ref.is_empty() && self.aa_new.is_empty() {
-            return Ok(format!(
-                "FT   VAR_SEQ         {}..{}\n\
-                FT                   /note=\"Missing in sample\"\n\
-                FT                   /id=\"{}\"\n",
-                self.pos_start, seq_len, self.id
-            ));
+        if self.aa_new.is_empty() {
+            if self.aa_ref.is_empty() {
+                return Ok(format!(
+                    "FT   VAR_SEQ         {}..{}\n\
+                    FT                   /note=\"Missing in Sample\"\n\
+                    FT                   /id=\"{}\"\n",
+                    self.pos_start, seq_len, self.id
+                ));
+            }
+            else {
+                return Ok(format!(
+                    "FT   VAR_SEQ         {}..{}\n\
+                    FT                   /note=\"{}\"\n\
+                    FT                   /id=\"{}\"\n",
+                    self.pos_start, seq_len, self.aa_ref, self.id
+                ));
+            }
         }
 
         Ok(format_variant(

@@ -6,15 +6,17 @@ use crate::variant::Variant;
 pub fn build_dummy_entry<W: std::io::Write>(
     enst: &str,
     var: Vec<Variant>,
-    seq: &str,
+    mut seq: String,
     masses_dict: &AminoMasses,
     mut writer: W,
 ) -> Result<()> {
     let mut ft_lines = String::new();
 
+    seq.truncate(seq.find('*').unwrap_or(seq.len()));
+
     let last_aa = seq.trim_end().chars().last();
 
-    let seqs = format_seq(seq, masses_dict).context(format!("Failed for {}", enst))?;
+    let seqs = format_seq(&seq, masses_dict).context(format!("Failed for {}", enst))?;
 
     if let Some(last_aa_valid) = last_aa {
         for mut variant in var {
