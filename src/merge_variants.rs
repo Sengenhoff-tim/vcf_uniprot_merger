@@ -44,23 +44,27 @@ where
         let cur_line = line_result.context(format!("Failed to read cur_line {}", line_num + 1))?;
 
         if cur_line.starts_with("ID")
-            || cur_line.starts_with("AC")
-            || cur_line.starts_with("CC")
-            || cur_line.starts_with("DT")
-            || cur_line.starts_with("DE")
-            || cur_line.starts_with("OS")
-            || cur_line.starts_with("OC")
-            || cur_line.starts_with("OX")
-            || cur_line.starts_with("RN")
-            || cur_line.starts_with("RP")
-            || cur_line.starts_with("RG")
-            || cur_line.starts_with("RA")
-            || cur_line.starts_with("RL")
-            || cur_line.starts_with("PE")
-        {
-            writeln!(writer, "{}", cur_line)?;
-            continue;
-        }
+        || cur_line.starts_with("AC")
+        || cur_line.starts_with("CC")
+        || cur_line.starts_with("DT")
+        || cur_line.starts_with("DE")
+        || cur_line.starts_with("GN")
+        || cur_line.starts_with("OS")
+        || cur_line.starts_with("OC")
+        || cur_line.starts_with("OX")
+        || cur_line.starts_with("RN")
+        || cur_line.starts_with("RP")
+        || cur_line.starts_with("RG")
+        || cur_line.starts_with("RA")
+        || cur_line.starts_with("RT")
+        || cur_line.starts_with("RL")
+        || cur_line.starts_with("DR")
+        || cur_line.starts_with("PE")
+        || cur_line.starts_with("KW")
+    {
+        writeln!(writer, "{}", cur_line)?;
+        continue;
+    }
 
         if collect_seq && !cur_line.starts_with("//") {
             seq.push_str(&format!("{}\n", &cur_line));
