@@ -63,12 +63,15 @@ impl Variant {
     pub fn to_uniprot(&self, seq_len: u32) -> Result<String> {
         if self.aa_new.is_empty() {
             if self.aa_ref.is_empty() {
+                return Ok(String::new())
+                /* 
                 return Ok(format!(
                     "FT   VAR_SEQ         {}..{}\n\
                     FT                   /note=\"Does not exist\"\n\
                     FT                   /id=\"{}\"\n",
                     self.pos_start, seq_len, self.id
                 ));
+                */
             } else {
                 return Ok(format!(
                     "FT   VAR_SEQ         {}..{}\n\
