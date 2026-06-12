@@ -216,6 +216,7 @@ where
                     aa_change_line.clear();
                     continue;
                 } else if !content.starts_with("/") {
+                    //TODO add unwrap handling
                     aa_change_line.push_str(cur_line.get(21..).unwrap());
                 }
             } else if !confirmed_only && !other_ft_lines.is_empty() {
