@@ -63,18 +63,15 @@ impl Variant {
     pub fn to_uniprot(&self, seq_len: u32) -> Result<String> {
         if self.aa_new.is_empty() {
             if self.aa_ref.is_empty() {
-                return Ok(String::new())
-                /* 
                 return Ok(format!(
-                    "FT   VAR_SEQ         {}..{}\n\
-                    FT                   /note=\"Does not exist\"\n\
+                    "FT   VARIANT         {}..{}\n\
+                    FT                   /note=\"Missing in Sample\"\n\
                     FT                   /id=\"{}\"\n",
                     self.pos_start, seq_len, self.id
                 ));
-                */
             } else {
                 return Ok(format!(
-                    "FT   VAR_SEQ         {}..{}\n\
+                    "FT   VARIANT         {}..{}\n\
                     FT                   /note=\"{}\"\n\
                     FT                   /id=\"{}\"\n",
                     self.pos_start, seq_len, self.aa_ref, self.id
@@ -101,7 +98,7 @@ fn format_variant(
 ) -> String {
     let mut result = pos_end
         .filter(|end| *end != pos_start)
-        .map(|end| format!("FT   VAR_SEQ         {}..{}\n", pos_start, end))
+        .map(|end| format!("FT   VARIANT         {}..{}\n", pos_start, end))
         .unwrap_or_else(|| format!("FT   VARIANT         {}\n", pos_start));
 
     let note = format!("{aa_ref} -> {aa_new}");
