@@ -24,8 +24,6 @@ where
     R: BufRead,
     W: Write,
 {
-    //let regex_enst = Regex::new(r"^ENST\d{11}(?:\.\d+)?$")?;
-    //let regex_aa_change = Regex::new(r"^([A-Z]+) -> ([A-Z]+)")?;
 
     let mut insert_candidates: Vec<&[Variant]> = Vec::new();
     let mut global_features_inserted: HashSet<u32> = HashSet::new();
@@ -61,10 +59,9 @@ where
         || cur_line.starts_with("DR")
         || cur_line.starts_with("PE")
         || cur_line.starts_with("KW")
-    {
-        writeln!(writer, "{}", cur_line)?;
-        continue;
-    }
+        {
+            writeln!(writer, "{}", cur_line)?;
+        }
 
         if collect_seq && !cur_line.starts_with("//") {
             seq.push_str(&format!("{}\n", &cur_line));
