@@ -65,7 +65,7 @@ impl Variant {
             if self.aa_ref.is_empty() {
                 return Ok(format!(
                     "FT   VAR_SEQ         {}..{}\n\
-                    FT                   /note=\"Missing (in isoform sample)\"\n\
+                    FT                   /note=\"Does not exist\"\n\
                     FT                   /id=\"{}\"\n",
                     self.pos_start, seq_len, self.id
                 ));
