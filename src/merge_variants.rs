@@ -56,11 +56,11 @@ where
         || cur_line.starts_with("RA")
         || cur_line.starts_with("RT")
         || cur_line.starts_with("RL")
-        || cur_line.starts_with("DR")
         || cur_line.starts_with("PE")
         || cur_line.starts_with("KW")
         {
             writeln!(writer, "{}", cur_line)?;
+            continue;
         }
 
         if collect_seq && !cur_line.starts_with("//") {
@@ -124,16 +124,18 @@ where
             continue;
         }
 
-        if cur_line.starts_with("DR   Ensembl;") {
-            collect_enst_variants(
-                &cur_line,
-                &REGEX_ENST,
-                features,
-                &mut global_features_inserted,
-                &mut insert_candidates,
-            )
-            .context(format!("Failed to parse DR cur_line {}", line_num + 1))?;
-
+        if cur_line.starts_with("DR") {
+            if cur_line.starts_with("DR   Ensembl;") {
+                collect_enst_variants(
+                    &cur_line,
+                    &REGEX_ENST,
+                    features,
+                    &mut global_features_inserted,
+                    &mut insert_candidates,
+                )
+                .context(format!("Failed to parse DR cur_line {}", line_num + 1))?;
+            }
+            writeln!(writer, "{}", cur_line)?;
             continue;
         }
 
