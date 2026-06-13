@@ -294,8 +294,12 @@ fn flush_pending_ft(blocks: &mut Vec<FtBlock>, pending: &mut PendingFt) {
                     }
                 }
                 // pos == None && !drop should not happen; discard if it does.
+            } else {
+                // Isoform-coordinate or otherwise unparseable variant (e.g.
+                // "A4UGR9-4:757"): can't compare to candidates, but must be
+                // kept verbatim so the output is not missing features.
+                blocks.push(FtBlock::NonVariant(std::mem::take(&mut pending.lines)));
             }
-            // dropped variant (e.g. crosslink / unparseable range): discard.
         } else {
             blocks.push(FtBlock::NonVariant(std::mem::take(&mut pending.lines)));
         }
