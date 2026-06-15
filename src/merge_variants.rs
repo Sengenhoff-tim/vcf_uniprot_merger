@@ -130,7 +130,9 @@ where
 
                 for candidate_slice in insert_candidates.drain(..) {
                     for mut candidate in candidate_slice.iter().cloned() {
-                        candidate.normalize(seq_len, last_aa_valid);
+                        if !candidate.normalize(seq_len, last_aa_valid) {
+                            continue;
+                        }
 
                         if let Some(&i) = index.get(&candidate) {
                             // Matches an existing feature: keep that feature's
