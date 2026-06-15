@@ -31,31 +31,34 @@ impl Variant {
         }
     }
 
-pub fn normalize(&mut self, seq_len: u32, last_seq_char: char) -> bool {
-    if self.pos_start > seq_len {
-        return false;
-    }
-
-    if self.aa_ref.ends_with("*") {
-        let combined = format!("{}{}", last_seq_char, self.aa_new.trim_end_matches('*'));
-        self.pos_start = seq_len;
-        self.pos_end = Some(seq_len);
-        self.aa_ref = last_seq_char.to_string();
-        self.aa_new = combined;
-    }
-
-    if self.aa_new.find("*").is_some() {
-        self.pos_end = Some(seq_len);
-        if self.aa_new.len() == 1 {
-            self.aa_new = String::new();
-            self.aa_ref = String::new();
-            return true;
+    pub fn normalize(&mut self, seq_len: u32, last_seq_char: char) {
+        if self.aa_ref.ends_with("*") {
+            //CASE *->AA*
+            let combined = format!("{}{}", last_seq_char, self.aa_new.trim_end_matches('*'));
+            self.pos_start = seq_len;
+            self.pos_end = Some(seq_len);
+            self.aa_ref = last_seq_char.to_string();
+            self.aa_new = combined;
         }
-        self.aa_new = self.aa_new.trim_end_matches('*').to_string();
-    }
 
-    true
-}
+        if self.aa_new.find("*").is_some() {
+            self.pos_end = Some(seq_len);
+            //CASE A->* & AA->*
+            if self.aa_new.len() == 1 {
+                self.aa_new = String::new();
+                self.aa_ref = String::new();
+
+                return;
+            }
+            //CASE A->A*
+            //CASE AA->A*
+            self.aa_new = self.aa_new.trim_end_matches('*').to_string();
+        }
+        //CASE A->A
+        //CASE A->AA
+        //CASE AA->A
+        //CASE AA->AA
+    }
 
     pub fn to_uniprot(&self, seq_len: u32) -> Result<String> {
         if self.aa_new.is_empty() {
